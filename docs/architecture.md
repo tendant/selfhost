@@ -17,7 +17,7 @@ The goal is simple: **make self-hosted infrastructure easy to deploy, secure, ma
 5. **Independent servers.** Avoid unnecessary cross-server dependencies.
 6. **Secure by default.** Encrypt secrets and automate TLS.
 7. **Agent-friendly.** Document conventions so AI coding agents can work consistently.
-8. **No premature abstractions.** Introduce shared components only when justified by real duplication.
+8. **No templates, minimal abstraction.** Configuration files hold literal values and are used as committed. Prefer repeated lines over layers that generate them.
 
 ## 2. Technology Stack
 

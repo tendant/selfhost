@@ -50,11 +50,19 @@ which in practice means one `qifa.yaml`.
 - Databases and caches that belong to one app are Qifa `accessories` in that
   app's config.
 
-## No premature sharing
+## No templates
 
-Duplicate a few lines of `qifa.yaml` across servers rather than inventing a
-templating layer. Introduce shared files only when real duplication makes
-maintenance painful, and document the reason when you do.
+Every `qifa.yaml` contains literal values: real hostnames, ports, and paths,
+read by Qifa exactly as committed.
+
+- No `envsubst`, `${VAR}` placeholders, render steps, or `build/` directories.
+- No generator scripts that write configs.
+- No Makefile wrappers around Qifa commands. Run `qifa -c <path> <command>`.
+- Secrets reach containers only through `env.secret_command`; they are never
+  substituted into config files.
+
+Repeated lines across servers or apps are fine. Copying a config and editing
+it is simpler to read, review, and debug than any layer that generates it.
 
 ## Required files
 

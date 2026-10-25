@@ -25,8 +25,10 @@ Full standards: https://github.com/tendant/selfhost (`docs/`).
    `<server>/<unit>/qifa.yaml` when a server runs several independently
    deployed units. Don't split API/web/worker unless they deploy independently;
    use Qifa roles instead.
-3. **No duplicate configuration.** Don't add templating, shared includes, or
-   wrapper scripts to remove a few repeated lines.
+3. **No templates or extra layers.** Each `qifa.yaml` holds literal values
+   and is used exactly as committed: no `envsubst`/`${VAR}` placeholders,
+   render steps, `build/` directories, config generators, or Makefile
+   wrappers. Repeated lines are acceptable; abstraction is not.
 4. **Secrets stay encrypted.** Only `*.sops.env` files are committed. Never
    write, print, or commit decrypted values. App secrets reach containers via
    `env.secret_command: sops --decrypt secrets.sops.env`. Never put secrets in

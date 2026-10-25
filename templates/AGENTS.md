@@ -17,7 +17,9 @@ Follow the `selfhost` skill when available.
   `provider: cloudflare`. The Cloudflare token lives in
   `<server>/cloudflare.sops.env`.
 - Make the smallest change; don't touch unrelated servers or units.
-- Avoid unnecessary abstractions (templating, wrapper scripts, shared config).
+- No templates: every `qifa.yaml` holds literal values and is used as
+  committed. No envsubst, render steps, generators, or Makefile wrappers.
+  Repeated lines are fine.
 - Never deploy, roll back, or change proxies or certificates in production
   without explicit authorization.
 
