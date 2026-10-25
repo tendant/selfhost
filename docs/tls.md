@@ -58,34 +58,35 @@ sops exec-env ../cloudflare.sops.env \
 
 ## Renew
 
-Run renewal on a schedule (daily is fine; renewal only happens within 30 days of
-expiry, tunable with `--renew-days`) from the operator machine or CI, once per
-server:
+Renew each app from its own `qifa.yaml`, daily (renewal only happens within 30
+days of expiry, tunable with `--renew-days`):
 
 ```bash
 sops exec-env prod-01/cloudflare.sops.env \
-  'qifa -c prod-01/myapp/qifa.yaml cert renew --all --provider cloudflare --email ops@example.com'
+  'qifa -c prod-01/myapp/qifa.yaml cert renew --email ops@example.com'
 ```
 
-Any `qifa.yaml` that targets the server works; `--all` renews every Qifa-managed
-certificate on that server.
+With no hostname, this renews the app's own certificate (`proxy.host`, plus any
+`proxy.hosts` as SANs; provider from `proxy.tls.provider`).
 
 kamal-proxy reads a certificate only when a route is deployed and never re-reads
-the file. When a certificate changed, `qifa cert renew` therefore re-registers
-every route that uses it, replaying the exact command `qifa deploy` recorded on
-the server. This swaps the route in place with no dropped requests; a
-certificate that fails to load leaves the old route serving. A run where nothing
-was due touches nothing, so run it daily.
+the file. When the certificate changed, `qifa cert renew` therefore re-registers
+the app's running containers, rebuilding the route from `qifa.yaml` and the
+containers' labels. This swaps the route in place with no dropped requests; a
+certificate that fails to load leaves the old route serving. Nothing is stored
+on the server, so any checkout of the infrastructure repository can renew. A run
+where nothing was due touches nothing. Requires Qifa `6a91f04` or later.
 
-Requires Qifa `16685e1` or later, and each app deployed once with it (routes
-are recorded on deploy). Renewal reports any certificate whose app still needs
-that first deploy.
-
-A plain cron entry on the machine that holds the age key is enough:
+Schedule it with plain cron on a machine that holds the age key, one line per
+app:
 
 ```cron
-15 2 * * * cd /path/to/infra && sops exec-env prod-01/cloudflare.sops.env 'qifa -c prod-01/myapp/qifa.yaml cert renew --all --provider cloudflare --email ops@example.com'
+15 2 * * * cd /path/to/infra && sops exec-env prod-01/cloudflare.sops.env 'qifa -c prod-01/myapp/qifa.yaml cert renew --email ops@example.com'
+20 2 * * * cd /path/to/infra && sops exec-env prod-01/cloudflare.sops.env 'qifa -c prod-01/other/qifa.yaml cert renew --email ops@example.com'
 ```
+
+Don't use `cert renew --all` on a schedule: it renews every certificate on the
+server but can serve only the app whose config it was given.
 
 ## Monitor
 

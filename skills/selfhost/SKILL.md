@@ -80,9 +80,10 @@ Full standards: https://github.com/tendant/selfhost (`docs/`).
 1. Create `<server>/`, add a `.sops.yaml` rule for it.
 2. `qifa doctor`, then `qifa proxy boot` once (with authorization).
 3. Add `<server>/cloudflare.sops.env` with a zone-scoped `CF_DNS_API_TOKEN`.
-4. Schedule a daily `qifa cert renew --all` for the server (a plain cron
-   entry). When a certificate changed it re-registers the routes using it,
-   with no downtime. Never restart kamal-proxy to pick up certificates.
+4. Schedule a daily `qifa -c <server>/<unit>/qifa.yaml cert renew` per app
+   (one plain cron line each, not `--all`). When the certificate changed it
+   re-registers that app's route from its `qifa.yaml`, with no downtime.
+   Never restart kamal-proxy to pick up certificates.
 
 ## Review checklist
 

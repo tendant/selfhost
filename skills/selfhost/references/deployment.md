@@ -173,9 +173,9 @@ proxy:
 sops exec-env prod-01/cloudflare.sops.env \
   'qifa -c prod-01/myapp/qifa.yaml cert issue app.example.com --provider cloudflare --email ops@example.com'
 
-# daily renewal for the whole server; re-registers routes of changed certs (no downtime)
+# daily renewal, one per app; re-registers its route if the cert changed (no downtime)
 sops exec-env prod-01/cloudflare.sops.env \
-  'qifa -c prod-01/myapp/qifa.yaml cert renew --all --provider cloudflare --email ops@example.com'
+  'qifa -c prod-01/myapp/qifa.yaml cert renew --email ops@example.com'
 
 qifa -c prod-01/myapp/qifa.yaml cert list --expiry
 ```
