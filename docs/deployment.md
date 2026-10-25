@@ -30,7 +30,7 @@ App repo ──CI──> image in registry ──> infra repo (qifa.yaml pins im
 | Immutable images | Pin `image:` to a version tag or `@sha256:` digest. Qifa resolves tags to digests at deploy time, but the config should still say exactly what runs. |
 | Validate first | `qifa config` (parse and validate), then `qifa deploy --dry-run`. Run `qifa doctor` on new or changed servers. |
 | Health before traffic | Set `proxy.healthcheck.path`. Qifa only switches traffic after the new container passes. |
-| Rollback | `qifa rollback [version]`. Keep `prune.retain_containers` above zero so a previous version exists. |
+| Rollback | `qifa rollback [version]`. Stopped previous versions are kept for this (`prune.retain_containers`, default 5); don't remove them by hand. |
 | Isolation | Deploy one unit at a time with `-c <server>/<unit>/qifa.yaml`. Never batch unrelated units. |
 | Secrets | `env.secret_command: sops --decrypt secrets.sops.env`. See [secrets.md](secrets.md). |
 | No drift | `qifa env diff` before deploying, `qifa reconcile --dry-run` to check a server matches its config. |
