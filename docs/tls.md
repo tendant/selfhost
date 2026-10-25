@@ -70,9 +70,22 @@ sops exec-env prod-01/cloudflare.sops.env \
 Any `qifa.yaml` that targets the server works; `--all` renews every Qifa-managed
 certificate on that server.
 
-kamal-proxy reads the certificate when an app is registered, so after a
-renewal **redeploy the affected apps** (`qifa deploy`, zero-downtime). Redeploy
-only apps whose certificate changed.
+kamal-proxy reads a certificate only when a route is deployed and never re-reads
+the file. When a certificate changed, `qifa cert renew` therefore re-registers
+every route that uses it, replaying the exact command `qifa deploy` recorded on
+the server. This swaps the route in place with no dropped requests; a
+certificate that fails to load leaves the old route serving. A run where nothing
+was due touches nothing, so run it daily.
+
+Requires Qifa `16685e1` or later, and each app deployed once with it (routes
+are recorded on deploy). Renewal reports any certificate whose app still needs
+that first deploy.
+
+A plain cron entry on the machine that holds the age key is enough:
+
+```cron
+15 2 * * * cd /path/to/infra && sops exec-env prod-01/cloudflare.sops.env 'qifa -c prod-01/myapp/qifa.yaml cert renew --all --provider cloudflare --email ops@example.com'
+```
 
 ## Monitor
 

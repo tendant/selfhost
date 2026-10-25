@@ -170,10 +170,10 @@ Use Qifa's built-in certificate management (`proxy.tls.source: qifa`):
 
 1. `qifa cert issue` obtains a certificate via the Cloudflare DNS API before an app's first deploy.
 2. Certificates are stored on each server in the kamal-proxy state volume.
-3. A scheduled `qifa cert renew --all` renews certificates nearing expiry.
-4. Affected apps are redeployed (zero-downtime) so Kamal Proxy serves the renewed certificate.
+3. A daily scheduled `qifa cert renew --all` renews certificates nearing expiry.
+4. When a certificate changed, the same command re-registers the routes that use it, since Kamal Proxy only reads certificates when a route is deployed. No downtime, no proxy restart.
 
-Renewal redeploys only the apps whose certificates changed, never unrelated applications. If a no-redeploy reload becomes necessary, add it to Qifa rather than building a parallel ACME setup.
+Renewal never redeploys applications. Keep certificate logic in Qifa rather than building a parallel ACME setup or wrapper scripts.
 
 HTTP-01 (`source: kamal`, kamal-proxy autocert) remains an alternative for individual hostnames but is not the preferred default. Bring-your-own certificates use `source: static`.
 
