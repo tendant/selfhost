@@ -4,6 +4,8 @@
 
 Selfhost is a collection of reusable infrastructure standards, deployment patterns, and AI agent skills for managing independent servers with Docker, Qifa, Kamal Proxy, Cloudflare, Let's Encrypt, and SOPS.
 
+This document is the overall design. Operational detail lives in the topic docs: [repository layout](repository-layout.md), [deployment](deployment.md), [TLS](tls.md), and [secrets](secrets.md).
+
 The goal is simple: **make self-hosted infrastructure easy to deploy, secure, maintain, and automate without unnecessary complexity.**
 
 ## 1. Design Principles
@@ -26,7 +28,7 @@ The goal is simple: **make self-hosted infrastructure easy to deploy, secure, ma
 | Reverse proxy | Kamal Proxy | HTTP routing and traffic switching |
 | DNS / CDN | Cloudflare | DNS, proxy, edge TLS, WAF |
 | TLS | Let's Encrypt | Publicly trusted certificates |
-| ACME client | Certbot | DNS-01 issuance and automatic renewal |
+| ACME client | Qifa (`qifa cert`, lego) | DNS-01 issuance and scheduled renewal |
 | Secrets | SOPS + age | Encrypted configuration stored in Git |
 | CI/CD | GitHub Actions / Gitea Actions | Build and publish images |
 
@@ -43,13 +45,13 @@ The goal is simple: **make self-hosted infrastructure easy to deploy, secure, ma
          Kamal Proxy             Kamal Proxy
              |                       |
         Docker Apps              Docker Apps
-             |                       |
-          Certbot                 Certbot
-             |                       |
-        Let's Encrypt           Let's Encrypt
+
+                Qifa (operator machine / CI)
+        deploys over SSH; issues and renews certificates
+        via Let's Encrypt DNS-01, stored on each server
 ```
 
-Each server manages its own deployment and TLS lifecycle.
+Each server has its own deployment and certificate state. Qifa holds no authoritative state on the operator machine.
 
 No Kubernetes, central deployment controller, or shared certificate storage is required.
 
@@ -69,11 +71,14 @@ selfhost/
 │   ├── tls.md
 │   └── secrets.md
 │
-└── skills/
-    └── selfhost/
-        ├── SKILL.md
-        └── references/
-            └── deployment.md
+├── skills/
+│   └── selfhost/
+│       ├── SKILL.md
+│       └── references/
+│           └── deployment.md
+│
+└── templates/
+    └── AGENTS.md
 ```
 
 ### Private infrastructure repositories
@@ -161,19 +166,18 @@ Cloudflare configuration:
 - HTTPS redirects enabled where appropriate.
 - API tokens scoped to necessary DNS zones.
 
-Each server:
+Use Qifa's built-in certificate management (`proxy.tls.source: qifa`):
 
-1. Runs Certbot.
-2. Uses Cloudflare DNS API for domain validation.
-3. Stores certificates locally.
-4. Renews certificates automatically.
-5. Updates Kamal Proxy certificates after renewal.
+1. `qifa cert issue` obtains a certificate via the Cloudflare DNS API before an app's first deploy.
+2. Certificates are stored on each server in the kamal-proxy state volume.
+3. A scheduled `qifa cert renew --all` renews certificates nearing expiry.
+4. Affected apps are redeployed (zero-downtime) so Kamal Proxy serves the renewed certificate.
 
-Certificate renewal must not require redeploying applications.
+Renewal redeploys only the apps whose certificates changed, never unrelated applications. If a no-redeploy reload becomes necessary, add it to Qifa rather than building a parallel ACME setup.
 
-Verify certificate installation and reload support in the installed Kamal Proxy version before automating it.
+HTTP-01 (`source: kamal`, kamal-proxy autocert) remains an alternative for individual hostnames but is not the preferred default. Bring-your-own certificates use `source: static`.
 
-HTTP-01 remains an alternative for individual hostnames but is not the preferred default.
+See [tls.md](tls.md) for the full procedure.
 
 ## 7. Secrets Management
 
@@ -227,7 +231,7 @@ The skill should instruct agents to:
 
 ## 9. Integrating with Other Repositories
 
-Each infrastructure repository should contain a short `AGENTS.md` referencing this project:
+Each infrastructure repository should contain a short `AGENTS.md` referencing this project (copy [templates/AGENTS.md](../templates/AGENTS.md)):
 
 ```markdown
 # Infrastructure Instructions
@@ -258,7 +262,7 @@ This project does not attempt to replace:
 - Qifa
 - Docker
 - Kamal Proxy
-- Certbot
+- Let's Encrypt / lego
 - Cloudflare
 - SOPS
 
@@ -286,6 +290,6 @@ Avoid building a framework before the operational need exists.
 
 **One server, one clear deployment configuration boundary, minimal moving parts.**
 
-Let Qifa manage deployments, Kamal Proxy manage routing, Certbot manage certificates, Cloudflare manage public ingress, and SOPS manage encrypted secrets.
+Let Qifa manage deployments and certificates, Kamal Proxy manage routing, Cloudflare manage public ingress, and SOPS manage encrypted secrets.
 
 Keep infrastructure understandable enough that both humans and AI agents can maintain it safely.
