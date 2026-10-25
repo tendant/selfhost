@@ -94,15 +94,15 @@ infra/
 │
 ├── prod-01/
 │   ├── qifa.yaml
-│   └── .env.sops
+│   └── secrets.sops.env
 │
 ├── prod-02/
 │   ├── qifa.yaml
-│   └── .env.sops
+│   └── secrets.sops.env
 │
 └── dev-01/
     ├── qifa.yaml
-    └── .env.sops
+    └── secrets.sops.env
 ```
 
 If a server contains multiple independently deployed applications, introduce subdirectories:
@@ -111,10 +111,10 @@ If a server contains multiple independently deployed applications, introduce sub
 prod-01/
 ├── project-a/
 │   ├── qifa.yaml
-│   └── .env.sops
+│   └── secrets.sops.env
 └── project-b/
     ├── qifa.yaml
-    └── .env.sops
+    └── secrets.sops.env
 ```
 
 Do not split API, web, and worker components unless they are independently deployed.
@@ -185,7 +185,7 @@ Use SOPS with age encryption.
 
 Rules:
 
-- Store encrypted `.env.sops` files in Git.
+- Store encrypted `*.sops.env` files in Git.
 - Never commit plaintext `.env` files.
 - Use encrypted files as the source of truth.
 - Restrict decryption identities.
