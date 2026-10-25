@@ -131,21 +131,23 @@ proxy:
     path: /up
 
 accessories:
-  redis:
-    image: redis:7.4-alpine
+  postgres:
+    image: postgres:16-alpine
     host: prod-01
     volumes:
-      - /srv/myapp/redis:/data
+      - /srv/myapp/postgres:/var/lib/postgresql/data
+    env:
+      POSTGRES_USER: myapp
+      POSTGRES_DB: myapp
+    secret_command: sops --decrypt postgres.sops.env   # POSTGRES_PASSWORD
 
 env:
-  clear:
-    REDIS_URL: redis://myapp-accessory-redis:6379
-  secret_command: sops --decrypt secrets.sops.env
+  secret_command: sops --decrypt secrets.sops.env     # DATABASE_URL, ...
 ```
 
-Accessory `env` is plaintext in Git. Don't use it for passwords; prefer images
-that read credentials from a mounted file, or keep the service unauthenticated
-on the private Docker network only.
+Accessory `env` is plaintext in Git. Passwords go in the accessory's own
+`secret_command` file (Qifa 0899bbe or later), not in `env`. Keep it separate
+from the app's `secrets.sops.env` so the database doesn't receive app keys.
 
 ## Internal-only service
 

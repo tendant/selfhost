@@ -31,8 +31,9 @@ Full standards: https://github.com/tendant/selfhost (`docs/`).
    wrappers. Repeated lines are acceptable; abstraction is not.
 4. **Secrets stay encrypted.** Only `*.sops.env` files are committed. Never
    write, print, or commit decrypted values. App secrets reach containers via
-   `env.secret_command: sops --decrypt secrets.sops.env`. Never put secrets in
-   `env.clear` or accessory `env` (both are plaintext in Git).
+   `env.secret_command: sops --decrypt secrets.sops.env`, accessory passwords
+   via `accessories.<name>.secret_command`. Never put secrets in `env.clear`
+   or accessory `env` (both are plaintext in Git).
 5. **Servers are independent.** No cross-server dependencies, shared
    certificate storage, or central controllers.
 6. **TLS is separate from app deploys.** Certificates are issued and renewed
