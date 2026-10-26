@@ -11,7 +11,6 @@ its configuration sits directly in the server directory:
 ```text
 infra/
 ├── AGENTS.md
-├── .sops.yaml
 ├── .gitignore
 │
 ├── prod-01/
@@ -66,15 +65,9 @@ it is simpler to read, review, and debug than any layer that generates it.
 
 ## Required files
 
-**`.sops.yaml`** routes encryption keys by path. See [secrets.md](secrets.md).
-
-```yaml
-creation_rules:
-  - path_regex: (^|/)prod-[^/]+/.*\.sops\.env$
-    age: age1prod...,age1ops...
-  - path_regex: (^|/)dev-[^/]+/.*\.sops\.env$
-    age: age1dev...,age1ops...
-```
+Each `*.sops.env` file lists its own age recipients, so no `.sops.yaml` is
+needed. One is optional, for repositories that want path rules to pick
+recipients when creating files. See [secrets.md](secrets.md).
 
 **`.gitignore`** blocks plaintext secrets:
 

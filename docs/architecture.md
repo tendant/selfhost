@@ -90,7 +90,6 @@ Example:
 ```text
 infra/
 ├── AGENTS.md
-├── .sops.yaml
 │
 ├── prod-01/
 │   ├── qifa.yaml
@@ -186,6 +185,7 @@ Use SOPS with age encryption.
 Rules:
 
 - Store encrypted `*.sops.env` files in Git.
+- Prefer self-contained files: each `*.sops.env` carries its own age recipients, so decrypting, editing and changing recipients need no repository-level `.sops.yaml`. A `.sops.yaml` remains optional.
 - Never commit plaintext `.env` files.
 - Use encrypted files as the source of truth.
 - Restrict decryption identities.

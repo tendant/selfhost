@@ -19,8 +19,8 @@ Full standards: https://github.com/tendant/selfhost (`docs/`).
 ## Rules
 
 1. **Inspect before changing.** Read the existing `qifa.yaml`, the server
-   directory, `.sops.yaml`, and the repository `AGENTS.md` first. Match what is
-   there.
+   directory, its `*.sops.env` recipients, and the repository `AGENTS.md`
+   first. Match what is there.
 2. **Server-first layout.** `<server>/qifa.yaml`, or
    `<server>/<unit>/qifa.yaml` when a server runs several independently
    deployed units. Don't split API/web/worker unless they deploy independently;
@@ -69,7 +69,8 @@ Full standards: https://github.com/tendant/selfhost (`docs/`).
    the user agrees).
 2. Write `qifa.yaml` from [references/deployment.md](references/deployment.md).
    Pin the image to a version tag or digest.
-3. Create secrets with `sops edit <dir>/secrets.sops.env` (the user types the
+3. Create secrets with `sops edit --age "$R" <dir>/secrets.sops.env`, with `$R`
+   the recipients of an existing file on that server (the user types the
    values; never ask them to paste secrets into the chat).
 4. Cloudflare: proxied DNS record, SSL mode Full (strict).
 5. Issue the certificate before the first deploy:
@@ -78,7 +79,9 @@ Full standards: https://github.com/tendant/selfhost (`docs/`).
 
 ### Add a new server
 
-1. Create `<server>/`, add a `.sops.yaml` rule for it.
+1. Create `<server>/` and choose its age recipients (operator key plus any
+   CI or host key). Pass them with `--age` when creating its first files;
+   later files copy them from an existing one (see `docs/secrets.md`).
 2. `qifa doctor`, then `qifa proxy boot` once (with authorization).
 3. Add `<server>/cloudflare.sops.env` with a zone-scoped `CF_DNS_API_TOKEN`.
 4. Schedule a daily `qifa -c <server>/<unit>/qifa.yaml cert renew` per app
